@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FC-1 AI Space Mission Code Runner</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a0e27;
+            color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            justify-content: center;
+            position: relative;
+        }
+
+        h1 {
+            color: #5c6bc0;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        /* Lang Switcher Widget */
+        .lang-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #5c6bc0;
+            border-radius: 20px;
+            padding: 5px 10px;
+            display: flex;
+            gap: 5px;
+            z-index: 1000;
+        }
+
+        .lang-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active {
+            background-color: #5c6bc0;
+            color: white;
+        }
+
+        /* Gaya Skrin Mula / Menu Utama */
+        .splash-screen {
+            background-color: rgba(10, 14, 39, 0.95);
+            border: 3px solid #5c6bc0;
+            border-radius: 12px;
+            padding: 30px 40px;
+            max-width: 650px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.7);
+            z-index: 100;
+            box-sizing: border-box;
+        }
+
+        .splash-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        /* Kotak Input Profil Pemain */
+        .player-identity-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #5c6bc0;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .player-identity-box label {
+            display: block;
+            font-weight: bold;
+            color: #ffeb3b;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .player-identity-box label .required-star {
+            color: #f44336;
+            margin-left: 2px;
+        }
+
+        .player-identity-box input, .player-identity-box select {
+            background: #10132e;
+            border: 1px solid #37396b;
+            padding: 8px;
+            font-size: 14px;
+            color: #fff;
+            border-radius: 4px;
+            width: 100%;
+            margin-bottom: 12px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .player-identity-box input:focus, .player-identity-box select:focus {
+            outline: 2px solid #5c6bc0;
+        }
+        .player-identity-box select option {
+            background: #10132e;
+            color: #fff;
+        }
+
+        .legend-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        /* Kotak Panduan Cara Bermain */
+        .how-to-play-box {
+            background-color: rgba(92, 107, 192, 0.15);
+            border: 1px solid #5c6bc0;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .how-to-play-box h3 {
+            margin-top: 0;
+            color: #5c6bc0;
+            font-size: 14px;
+        }
+
+        .how-to-play-box ol {
+            margin: 5px 0 0 0;
+            padding-left: 18px;
+            color: #e0e0e0;
+            line-height: 1.4;
+        }
+
+        /* Kotak Nota Kesediaan Misi */
+        .readiness-notes {
+            background-color: rgba(244, 67, 54, 0.15);
+            border: 1px solid #f44336;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .readiness-notes h3 {
+            margin-top: 0;
+            color: #ff9800;
+            font-size: 14px;
+        }
+
+        .readiness-notes ul {
+            margin: 5px 0 0 0;
+            padding-left: 18px;
+            color: #e0e0e0;
+        }
+
+        .play-btn {
+            background-color: #5c6bc0;
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(92, 107, 192, 0.4);
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .play-btn:hover {
+            background-color: #3949ab;
+            transform: scale(1.02);
+        }
+
+        /* Kotak Utama Permainan */
+        .main-game-wrapper {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .mission-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1100px;
+            width: 100%;
+            margin-bottom: 10px;
+            background: rgba(0,0,0,0.2);
+            padding: 10px 20px;
+            border-radius: 6px;
+            box-sizing: border-box;
+            gap: 15px;
+        }
+
+        .timer-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .timer-display {
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffeb3b;
+            background: #10132e;
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid #37396b;
+            white-space: nowrap;
+        }
+
+        .timer-display.elapsed {
+            color: #4af5a0;
+        }
+
+        .timer-display.time-warning {
+            color: #ff3333;
+            animation: blinker 1s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0.5; }
+        }
+
+        .active-user-badge {
+            font-size: 14px;
+            color: #81c784;
+            line-height: 1.4;
+            max-width: 40%;
+            word-wrap: break-word;
+        }
+
+        .mission-brief {
+            background-color: rgba(0, 0, 0, 0.4);
+            border-left: 4px solid #ff9800;
+            padding: 10px 20px;
+            border-radius: 4px;
+            max-width: 1100px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .level-badge-header {
+            background-color: #ff9800;
+            color: #000;
+            padding: 4px 10px;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: inline-block;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1100px;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Gaya Peta Grid 10x10 */
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 45px);
+            grid-template-rows: repeat(10, 45px);
+            gap: 2px;
+            background-color: #0c0f2a;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            border: 3px solid #2b2f6e;
+        }
+
+        .cell {
+            background-color: #232752; 
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            position: relative;
+        }
+
+        .cell.river { background-color: #ab47bc; }
+        .cell.obstacle { background-color: #3d1a2b; }
+        .cell.checkpoint { background-color: #8e24aa; border: 2px dashed #fff; }
+        .cell.checkpoint.completed { background-color: #2e7d32; border: 2px dashed #a5d6a7; }
+        .cell.destination { background-color: #00acc1; font-weight: bold; }
+        .cell.pickup { background-color: #00897b; }
+
+        .cp-label {
+            position: absolute;
+            font-size: 8px;
+            bottom: 1px;
+            color: #fff;
+            background: rgba(0,0,0,0.6);
+            padding: 1px 2px;
+            border-radius: 3px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .cp-label.done {
+            background: #2e7d32;
+            color: #ffeb3b;
+            border: 1px solid #ffeb3b;
+        }
+
+        /* Susun Atur Minibot */
+        .minibot-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.25s ease-in-out;
+            z-index: 10;
+        }
+
+        .minibot-sprite {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .minibot-arrow {
+            font-size: 12px;
+            font-weight: bold;
+            color: #ffeb3b;
+            margin-top: -4px;
+            text-shadow: 0px 0px 3px #000;
+        }
+
+        /* Susun Atur Panel Kawalan */
+        .control-panel {
+            width: 390px;
+            background-color: #253b25;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            border-top: 5px solid #5c6bc0;
+            box-sizing: border-box;
+        }
+
+        /* Ruang Kerja Pengaturcaraan Blok */
+        .code-queue-container {
+            background-color: #0b0e26;
+            padding: 15px 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 2px dashed #37396b;
+            height: 240px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0px;
+        }
+
+        /* Elemen Visual Pengaturcaraan Blok */
+        .block-code-item {
+            width: 95%;
+            padding: 8px 12px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-weight: bold;
+            font-size: 13px;
+            color: white;
+            display: flex;
+            align-items: center;
+            border-radius: 8px;
+            margin-bottom: 1px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            border-left: 5px solid rgba(0,0,0,0.2);
+            box-sizing: border-box;
+        }
+
+        .block-code-item::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 20px;
+            width: 16px;
+            height: 6px;
+            background: inherit;
+            border-bottom-left-radius: 3px;
+            border-bottom-right-radius: 3px;
+            z-index: 2;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+
+        .block-code-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20px;
+            width: 16px;
+            height: 4px;
+            background: #0b0e26;
+            border-bottom-left-radius: 3px;
+            border-bottom-right-radius: 3px;
+            z-index: 1;
+        }
+
+        .block-code-item.block-nav {
+            background-color: #4a148c;
+            border-top: 1px solid #7c43bd;
+        }
+        .block-code-item.block-hw-on {
+            background-color: #e65100;
+            border-top: 1px solid #ff80ab;
+        }
+        .block-code-item.block-hw-off {
+            background-color: #01579b;
+            border-top: 1px solid #40c4ff;
+        }
+
+        .block-index {
+            background: rgba(0,0,0,0.3);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 10px;
+            color: #ccc;
+        }
+
+        .hardware-monitor {
+            background-color: #10132e;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #37396b;
+        }
+
+        .hardware-status {
+            display: flex;
+            justify-content: space-between;
+            margin: 6px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .indicator {
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .indicator.status-off { background-color: #555; color: #aaa; }
+        .indicator.status-led-on { background-color: #ffeb3b; color: #000; }
+        .indicator.status-buzzer-on { background-color: #ff5722; color: #fff; }
+
+        /* Gaya Blok Parametrik dengan Kotak Input Dalam Talian */
+        .parametric-block-btn {
+            width: 100%;
+            background-color: #6a1b9a;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            transition: background 0.2s;
+            box-sizing: border-box;
+        }
+        .parametric-block-btn:hover { background-color: #4a148c; }
+
+        .bracket-wrapper {
+            display: inline-flex;
+            align-items: center;
+            color: #ffeb3b;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .inline-bracket-input {
+            width: 38px;
+            background: #10132e;
+            border: 1px solid #a255ff;
+            color: #fff;
+            text-align: center;
+            font-weight: bold;
+            font-size: 13px;
+            padding: 4px 2px;
+            margin: 0 4px;
+            border-radius: 4px;
+        }
+        .inline-bracket-input:focus {
+            outline: 1px solid #ffeb3b;
+        }
+
+        .btn-grid-hardware {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .btn-grid-editing {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .action-btn {
+            background-color: #5c6bc0;
+            color: white;
+            border: none;
+            padding: 8px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        .action-btn:hover { background-color: #3949ab; }
+        
+        .action-btn.hw-on { background-color: #ef6c00; font-size: 12.5px; }
+        .action-btn.hw-on:hover { background-color: #e65100; }
+        .action-btn.hw-off { background-color: #0288d1; font-size: 12.5px; }
+        .action-btn.hw-off:hover { background-color: #01579b; }
+
+        .action-btn.delete-btn { background-color: #ff9800; }
+        .action-btn.delete-btn:hover { background-color: #f57c00; }
+        .action-btn.clear-btn { background-color: #757575; }
+        .action-btn.clear-btn:hover { background-color: #616161; }
+
+        .action-btn.run-btn { background-color: #2196f3; }
+        .action-btn.run-btn:hover { background-color: #1e88e5; }
+        .action-btn.reset-btn { background-color: #f44336; }
+        .action-btn.reset-btn:hover { background-color: #d32f2f; }
+
+        .action-btn.next-level-btn { background-color: #e65100; box-shadow: 0 4px 10px rgba(230,81,0,0.4); display: none; grid-column: span 2; padding: 12px; font-size: 14px; }
+        .action-btn.next-level-btn:hover { background-color: #ef6c00; }
+
+        .action-btn.menu-btn { 
+            background-color: #9c27b0; 
+            grid-column: span 2; 
+            display: none; 
+            font-size: 15px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+        }
+        .action-btn.menu-btn:hover { background-color: #8e24aa; }
+
+        .log-box {
+            background-color: #10132e;
+            border: 1px solid #37396b;
+            height: 140px;
+            overflow-y: auto;
+            padding: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #81c784;
+            border-radius: 4px;
+        }
+
+        /* Leaderboard Widget */
+        .leaderboard-btn {
+            background-color: rgba(0,0,0,0.6);
+            border: 2px solid #5c6bc0;
+            color: #ffeb3b;
+            font-weight: bold;
+            font-size: 12px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .leaderboard-btn:hover {
+            background-color: #5c6bc0;
+            color: #fff;
+        }
+
+        .splash-leaderboard-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .header-leaderboard-btn {
+            white-space: nowrap;
+        }
+
+        .leaderboard-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .leaderboard-overlay.active { display: flex; }
+
+        .leaderboard-modal {
+            background: #10132e;
+            border: 3px solid #5c6bc0;
+            border-radius: 12px;
+            max-width: 650px;
+            width: 100%;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.8);
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 2px solid #37396b;
+        }
+
+        .leaderboard-header h2 {
+            margin: 0;
+            color: #00e5ff;
+            font-size: 18px;
+            text-shadow: 0 0 6px rgba(0,229,255,0.5);
+        }
+
+        .leaderboard-close-btn {
+            background: #d32f2f;
+            color: #fff;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .leaderboard-close-btn:hover { background: #b71c1c; }
+
+        .leaderboard-body {
+            overflow-y: auto;
+            padding: 10px 20px 20px 20px;
+        }
+
+        .leaderboard-note {
+            font-size: 11px;
+            color: #9fa8da;
+            margin: 0 0 10px 0;
+        }
+
+        table.leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        table.leaderboard-table th {
+            text-align: left;
+            color: #b39ddb;
+            border-bottom: 2px solid #37396b;
+            padding: 6px 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        table.leaderboard-table td {
+            padding: 7px 8px;
+            border-bottom: 1px solid #232752;
+            color: #f5f5f5;
+        }
+
+        table.leaderboard-table tr.rank-1 td { color: #ffd700; font-weight: bold; }
+        table.leaderboard-table tr.rank-2 td { color: #c0c0c0; font-weight: bold; }
+        table.leaderboard-table tr.rank-3 td { color: #cd7f32; font-weight: bold; }
+
+        .leaderboard-empty, .leaderboard-loading {
+            text-align: center;
+            color: #9fa8da;
+            padding: 30px 10px;
+            font-size: 13px;
+        }
+
+        .leaderboard-refresh-btn {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            background-color: #5c6bc0;
+            color: white;
+            border: none;
+            padding: 8px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .leaderboard-refresh-btn:hover { background-color: #3949ab; }
+    </style>
+</head>
+<body>
+
+    <div class="lang-switcher">
+        <button id="btnLangMY" class="lang-btn active" onclick="setLanguage('MY')">MY</button>
+        <button id="btnLangEN" class="lang-btn" onclick="setLanguage('EN')">EN</button>
+    </div>
+
+    <button class="leaderboard-btn splash-leaderboard-btn" id="splashLeaderboardBtn" onclick="openLeaderboard()">🏆 <span id="txtLeaderboardBtnLabel">Papan Pendahulu</span></button>
+
+    <div class="leaderboard-overlay" id="leaderboardOverlay">
+        <div class="leaderboard-modal">
+            <div class="leaderboard-header">
+                <h2 id="txtLeaderboardTitle">🏆 Papan Pendahulu</h2>
+                <button class="leaderboard-close-btn" onclick="closeLeaderboard()">✕</button>
+            </div>
+            <div class="leaderboard-body">
+                <p class="leaderboard-note" id="txtLeaderboardNote">Data dikongsi bersama semua pasukan yang menggunakan simulator ini.</p>
+                <div id="leaderboardContent">
+                    <div class="leaderboard-loading" id="txtLeaderboardLoading">⏳ Memuatkan data...</div>
+                </div>
+                <button class="leaderboard-refresh-btn" id="txtLeaderboardRefresh" onclick="loadLeaderboard()">🔄 Muat Semula</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="splash-screen" id="splashScreen">
+        <h1 id="txtMainTitle">Cabaran FC-1 AI: Misi Angkasa</h1>
+        <p id="txtSubTitle" style="margin-top: 0; color: #b39ddb;">Arena Navigasi Angkasa Autonomi (Kempen Pelbagai Tahap)</p>
+        
+        <div class="splash-content-wrapper">
+            <div class="player-identity-box">
+                <label for="groupNameInput" id="lblGroup">NAMA PESERTA:<span class="required-star">*</span></label>
+                <input type="text" id="groupNameInput" placeholder="Masukkan Nama Peserta (Wajib)" required>
+
+                <label for="schoolNameInput" id="lblSchool">NAMA SEKOLAH:<span class="required-star">*</span></label>
+                <input type="text" id="schoolNameInput" placeholder="Masukkan Nama Sekolah (Wajib)" required>
+
+                <label for="stateInput" id="lblState">NEGERI:<span class="required-star">*</span></label>
+                <select id="stateInput" required>
+                    <option value="" disabled selected id="optStateDefault">-- Pilih Negeri / Wilayah --</option>
+                    <option value="Johor">Johor</option>
+                    <option value="Kedah">Kedah</option>
+                    <option value="Kelantan">Kelantan</option>
+                    <option value="Melaka">Melaka</option>
+                    <option value="Negeri Sembilan">Negeri Sembilan</option>
+                    <option value="Pahang">Pahang</option>
+                    <option value="Penang">Penang</option>
+                    <option value="Perak">Perak</option>
+                    <option value="Perlis">Perlis</option>
+                    <option value="Sabah">Sabah</option>
+                    <option value="Sarawak">Sarawak</option>
+                    <option value="Selangor">Selangor</option>
+                    <option value="Terengganu">Terengganu</option>
+                    <option value="W.P. Kuala Lumpur">Wilayah Persekutuan Kuala Lumpur</option>
+                    <option value="W.P. Putrajaya">Wilayah Persekutuan Putrajaya</option>
+                    <option value="W.P. Labuan">Wilayah Persekutuan Labuan</option>
+                </select>
+            </div>
+
+            <div class="how-to-play-box">
+                <h3 id="txtHowToPlayTitle">📖 CARA BERMAIN:</h3>
+                <ol id="txtHowToPlayList">
+                    <li>Isi profil kumpulan di atas untuk mulakan misi.</li>
+                    <li>Seterusnya, rancang laluan pergerakan rover daripada petak pelancaran (bawah kiri) ke Stesen Angkasa Destinasi (🛰️).</li>
+                    <li>Gunakan butang blok kod pergerakan di panel kawalan. Anda boleh menukar nilai di dalam kurungan <strong>[...]</strong> untuk menetapkan bilangan langkah/pusingan sekali gus.</li>
+                    <li>Pastikan rover singgah di petak Kargo (📦) untuk mengambil bekalan sebelum pergi ke stesen angkasa.</li>
+                    <li>Pastikan juga rover singgah di setiap Checkpoint (🟣) dan laksanakan perintah perkakasan (LED & Buzzer) yang betul mengikut syarat protokol keselamatan misi.</li>
+                    <li>⚠️ <strong>ZON PROHIBISI / HALANGAN:</strong> Elakkan daripada melanggar atau memasuki petak halangan berbahaya seperti Zon Radiasi (☢️), Batu Meteorit (🪨), Makhluk Asing (👽) atau Drone Musuh (🛸). Rover akan mengalami kegagalan mekanikal serta-merta (*CRASH*) sekiranya memasuki petak ini!</li>
+                    <li>Klik butang <strong>"JALANKAN BLOK KOD"</strong> untuk melihat rover bergerak secara autonomi.</li>
+                </ol>
+            </div>
+
+            <div class="legend-grid" id="legendBox">
+                <div>🤖 Rover (Dengan Anak Panah)</div>
+                <div>🛰️ Stesen Angkasa Destinasi</div>
+                <div>📦 Bekalan Kargo</div>
+                <div>🟣 Checkpoint IoT</div>
+                <div>☢️ Zon Radiasi</div>
+                <div>🪨 Hazards Bahaya Ada</div>
+            </div>
+
+            <div class="readiness-notes">
+                <h3 id="txtCriticalTimeTitle">⏱️ MASA MISI:</h3>
+                <p id="txtCriticalTimeDesc" style="margin: 3px 0; font-size: 12px; color: #ffeb3b; font-weight: bold;">Masa akan bermula dari 00:00 dan meningkat sehingga misi selesai.</p>
+                <ul id="txtCriticalTimeList" style="font-size: 11px; padding-left: 14px; margin-top: 5px;">
+                    <li><strong>Peta 1 - Bulan:</strong> CP1 (LED On/Buzzer Off) | CP2 (LED Off/Buzzer On)</li>
+                    <li><strong>Peta 2 - Asteroid:</strong> CP3 (LED On/Buzzer Off) | CP4 (LED On/Buzzer On)</li>
+                    <li><strong>Peta 3 - Marikh:</strong> CP5 (Semua Off) | CP6 (LED On/Buzzer Off) | CP7 (Semua On)</li>
+                </ul>
+            </div>
+        </div>
+
+        <button class="play-btn" id="btnStartMission" onclick="startGame()">▶ MULAKAN MISI</button>
+    </div>
+
+    <div class="main-game-wrapper" id="mainGameWrapper">
+        <div class="mission-header-row">
+            <div>
+                <h1 id="txtGameHeaderTitle">Simulator Misi Angkasa FC-1 AI</h1>
+                <div class="level-badge-header" id="currentLevelBadge">TAHAP 1: PERMUKAAN BULAN</div>
+            </div>
+            <div class="active-user-badge" id="activePilotBadge">
+                <span id="lblDisplayGroup">👥 Kumpulan:</span> <span id="displayGroupName">Kumpulan Tetamu</span><br>
+                🏫 <span id="displaySchool">Sekolah</span> (<span id="displayState">--</span>)
+            </div>
+            <div class="timer-group">
+                <div class="timer-display elapsed" id="timerContainer"><span id="lblTimeLeft">⏱️ MASA DIAMBIL:</span> <span id="missionTimer">00:00</span></div>
+                <div class="timer-display elapsed" id="elapsedContainer" style="display:none;"><span id="lblTimeElapsed">⏱️ MASA BERLALU:</span> <span id="elapsedTimer">00:00</span></div>
+                <button class="leaderboard-btn header-leaderboard-btn" id="headerLeaderboardBtn" onclick="openLeaderboard()">🏆 <span id="txtLeaderboardBtnLabel2">Papan Pendahulu</span></button>
+            </div>
+        </div>
+
+        <div class="mission-brief" id="missionBriefBox"></div>
+
+        <div class="game-container">
+            <div class="map-grid" id="mapGrid"></div>
+
+            <div class="control-panel">
+                <h2 id="txtWorkspaceTitle">🧱 Ruang Kerja Blok Kod</h2>
+                <div class="code-queue-container" id="codeQueue">
+                    <span style="color:#777; font-size:12px; margin: auto;" id="emptyCodePlaceholder">Tetapkan nilai dalam kurungan & ketik untuk kompil...</span>
+                </div>
+
+                <div class="parametric-block-btn" onclick="addParametricBlock('forward', 'bracketForward')">
+                    <span id="blockMoveForward">🚶 move_forward (gerak_depan)</span>
+                    <span class="bracket-wrapper">[<input type="number" id="bracketForward" class="inline-bracket-input" value="1" min="1" max="10" onclick="event.stopPropagation();">]</span>
+                </div>
+                
+                <div class="parametric-block-btn" onclick="addParametricBlock('left', 'bracketLeft')">
+                    <span id="blockTurnLeft">↩️ turn_left_90_degree (pusing_kiri)</span>
+                    <span class="bracket-wrapper">[<input type="number" id="bracketLeft" class="inline-bracket-input" value="1" min="1" max="4" onclick="event.stopPropagation();">]</span>
+                </div>
+
+                <div class="parametric-block-btn" onclick="addParametricBlock('right', 'bracketRight')">
+                    <span id="blockTurnRight">↪️ turn_right_90_degree (pusing_kanan)</span>
+                    <span class="bracket-wrapper">[<input type="number" id="bracketRight" class="inline-bracket-input" value="1" min="1" max="4" onclick="event.stopPropagation();">]</span>
+                </div>
+
+                <div class="btn-grid-hardware" style="margin-top: 12px;">
+                    <button class="action-btn hw-on" onclick="addHardwareCommand('led_on')">💡 led_on</button>
+                    <button class="action-btn hw-on" onclick="addHardwareCommand('buzzer_on')">🔊 buzzer_on</button>
+                    <button class="action-btn hw-off" onclick="addHardwareCommand('led_off')">🔌 led_off</button>
+                    <button class="action-btn hw-off" onclick="addHardwareCommand('buzzer_off')">🔇 buzzer_off</button>
+                </div>
+
+                <div class="btn-grid-editing">
+                    <button class="action-btn delete-btn" id="btnDeleteBlock" onclick="deleteLastCommand()">⌫ Buang Blok</button>
+                    <button class="action-btn clear-btn" id="btnClearAll" onclick="clearCodeBuffer()">🗑️ Padam Semua</button>
+                </div>
+
+                <h2 id="txtExecTitle">Kawalan Pelaksanaan</h2>
+                <div class="btn-grid-editing">
+                    <button class="action-btn run-btn" id="runBtn" onclick="runProgram()">🚀 JALANKAN BLOK KOD</button>
+                    <button class="action-btn reset-btn" id="resetBtn" onclick="resetSimulation()">🔄 TETAP SEMULA BOT & PETA</button>
+                    <button class="action-btn next-level-btn" id="nextLevelBtn" onclick="advanceToNextLevel()">⏩ MARA KE PETA SETERUSNYA</button>
+                    <button class="action-btn menu-btn" id="menuBtn" onclick="returnToMainMenu()">◀ KEMBALI KE MENU UTAMA</button>
+                </div>
+
+                <h2 id="txtTelemetryTitle">Log Status Telemetri</h2>
+                <div class="hardware-monitor">
+                    <div class="hardware-status"><span id="lblInventory">Inventori Kargo:</span><span id="cargoStatus" style="color: #ffb74d;">Kosong</span></div>
+                    <div class="hardware-status"><span id="lblLed">LED Terbina:</span><span id="ledIndicator" class="indicator status-off">OFF</span></div>
+                    <div class="hardware-status"><span id="lblBuzzer">Buzzer Piezo:</span><span id="buzzerIndicator" class="indicator status-off">OFF</span></div>
+                </div>
+
+                <div class="log-box" id="consoleLog">Sistem dimulakan...<br></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================================
+        // DICTIONARY MULTI-BAHASA (LOCALIZATION DATA)
+        // ========================================================
+        let currentLang = "MY"; 
+        const langData = {
+            MY: {
+                mainTitle: "Cabaran FC-1 AI: Misi Angkasa",
+                subTitle: "Arena Navigasi Angkasa Autonomi (Kempen Pelbagai Tahap)",
+                lblGroup: "NAMA PESERTA:",
+                placeholderGroup: "Masukkan Nama Peserta (Wajib)",
+                lblSchool: "NAMA SEKOLAH:",
+                placeholderSchool: "Masukkan Nama Sekolah (Wajib)",
+                lblState: "NEGERI:",
+                optStateDefault: "-- Pilih Negeri / Wilayah --",
+                howToPlayTitle: "📖 CARA BERMAIN:",
+                howToPlayList: `
+                    <li>Isi profil kumpulan di atas untuk mulakan misi.</li>
+                    <li>Seterusnya, rancang laluan pergerakan rover daripada petak pelancaran (bawah kiri) ke Stesen Angkasa Destinasi (🛰️).</li>
+                    <li>Gunakan butang blok kod pergerakan di panel kawalan. Anda boleh menukar nilai di dalam kurungan <strong>[...]</strong> untuk menetapkan bilangan langkah/pusingan sekali gus.</li>
+                    <li>Pastikan rover singgah di petak Kargo (📦) untuk mengambil bekalan sebelum pergi ke stesen angkasa.</li>
+                    <li>Pastikan juga rover singgah di setiap Checkpoint (🟣) dan laksanakan perintah perkakasan (LED & Buzzer) yang betul mengikut syarat protokol keselamatan misi.</li>
+                    <li>⚠️ <strong>ZON PROHIBISI / HALANGAN:</strong> Elakkan daripada melanggar atau memasuki petak halangan berbahaya seperti Zon Radiasi (☢️), Batu Meteorit (🪨), Makhluk Asing (👽) atau Drone Musuh (🛸). Rover akan mengalami kegagalan mekanikal serta-merta (*CRASH*) sekiranya memasuki petak ini!</li>
+                    <li>Klik butang <strong>"JALANKAN BLOK KOD"</strong> untuk melihat rover bergerak secara autonomi.</li>
+                `,
+                legendBox: `
+                    <div>🤖 Rover (Dengan Anak Panah)</div>
+                    <div>🛰️ Stesen Angkasa Destinasi</div>
+                    <div>📦 Bekalan Kargo</div>
+                    <div>🟣 Checkpoint IoT</div>
+                    <div>☢️ Zon Radiasi</div>
+                    <div>🪨 Hazards Bahaya Ada</div>
+                `,
+                criticalTimeTitle: "⏱️ MASA MISI:",
+                criticalTimeDesc: "Masa akan bermula dari 00:00 dan meningkat sehingga misi selesai.",
+                criticalTimeList: `
+                    <li><strong>Peta 1 - Bulan:</strong> CP1 (LED On/Buzzer Off) | CP2 (LED Off/Buzzer On)</li>
+                    <li><strong>Peta 2 - Asteroid:</strong> CP3 (LED On/Buzzer Off) | CP4 (LED On/Buzzer On)</li>
+                    <li><strong>Peta 3 - Marikh:</strong> CP5 (Semua Off) | CP6 (LED On/Buzzer Off) | CP7 (Semua On)</li>
+                `,
+                btnStartMission: "▶ MULAKAN MISI",
+                leaderboardBtnLabel: "Papan Pendahulu",
+                leaderboardTitle: "🏆 Papan Pendahulu",
+                leaderboardNote: "Data dikongsi bersama semua pasukan yang menggunakan simulator ini.",
+                leaderboardNoteSheet: "☁️ Data disegerakkan terus dari Google Sheet — dikongsi merentas semua peranti & pasukan.",
+                leaderboardNoteLocal: "⚠️ Mod storan tempatan: rekod hanya disimpan pada peranti/pelayar ini sahaja (tidak dikongsi dengan pasukan lain).",
+                leaderboardLoading: "⏳ Memuatkan data...",
+                leaderboardEmpty: "Tiada rekod lagi. Jadilah pasukan pertama menyelesaikan misi!",
+                leaderboardRefresh: "🔄 Muat Semula",
+                leaderboardColRank: "#",
+                leaderboardColGroup: "Peserta",
+                leaderboardColSchool: "Sekolah",
+                leaderboardColState: "Negeri",
+                leaderboardColTime: "Masa",
+                leaderboardSaveError: "⚠️ Gagal menyimpan ke papan pendahulu.",
+                leaderboardLoadError: "⚠️ Gagal memuatkan papan pendahulu.",
+                gameHeaderTitle: "Simulator Misi Angkasa FC-1 AI",
+                level1Badge: "TAHAP 1: PERMUKAAN BULAN",
+                level2Badge: "TAHAP 2: MEDAN ASTEROID",
+                level3Badge: "TAHAP 3: PLANET MARIKH",
+                displayGroup: "👥 Kumpulan:",
+                displayGuest: "Kumpulan Tetamu",
+                timeLeft: "⏱️ MASA DIAMBIL:",
+                timeElapsed: "⏱️ MASA BERLALU:",
+                workspaceTitle: "🧱 Ruang Kerja Blok Kod",
+                placeholderEmptyCode: "Tetapkan nilai dalam kurungan & ketik untuk kompil...",
+                blockMoveForward: "🚶 move_forward (gerak_depan)",
+                blockTurnLeft: "↩️ turn_left_90_degree (pusing_kiri)",
+                blockTurnRight: "↪️ turn_right_90_degree (pusing_kanan)",
+                btnDeleteBlock: "⌫ Buang Blok",
+                btnClearAll: "🗑️ Padam Semua",
+                execTitle: "Kawalan Pelaksanaan",
+                runBtn: "🚀 JALANKAN BLOK KOD",
+                resetBtn: "🔄 TETAP SEMULA ROVER & PETA",
+                nextLevelBtn: "⏩ MARA KE PETA SETERUSNYA",
+                menuBtn: "◀ KEMBALI KE MENU UTAMA",
+                telemetryTitle: "Log Status Telemetri",
+                lblInventory: "Inventori Kargo:",
+                lblLed: "LED Terbina:",
+                lblBuzzer: "Buzzer Piezo:",
+                cargoEmpty: "Kosong",
+                sysInit: "Sistem dimulakan...",
+                accessDenied: "⚠️ Akses Ditolak: Sila isi semua medan dengan lengkap sebelum memulakan sistem!",
+                matriksVerified: "Matriks misi disahkan. Tahap 1 sedia.",
+                timeoutLog: "🚨 Masa misi dihentikan.",
+                timeoutAlert: "❌ Misi dihentikan. Sistem dikunci.",
+                levelPassed: (lvl) => `🎉 PETA ${lvl} BERJAYA DILEPASI!`,
+                levelPassedDesc: (lvl) => lvl === 1 ? "Akses ke Peta 2 diberikan." : "Membuka Tahap 3: Planet Marikh!",
+                levelFailed: (lvl) => `❌ GAGAL: Pelanggaran peraturan keselamatan di Peta ${lvl}! Milestone tidak lengkap.`,
+                levelFailedOut: "❌ GAGAL: Blok arahan habis sebelum sempat tiba di stesen angkasa destinasi.",
+                levelFailedNoCargo: "❌ GAGAL: Tiba di stesen angkasa tanpa kargo kritikal yang lengkap!",
+                campaignSuccess: (time) => `🏆 MISI ANGKASA SELESAI SEPENUHNYA! Jumlah Masa Diambil: ${time}`,
+                cloudSuccess: "Tahniah, anda berjaya menyelesaikan misi angkasa ini!",
+                cloudError: "❌ Ralat Penghantaran Cloud: ",
+                boundaryCrash: "💥 PELANGGARAN: Melanggar sempadan luar angkasa! GAGAL.",
+                obstacleCrash: (tile, r, c) => `💥 KEMALANGAN! Melanggar halangan (${tile}) di koordinat [${r}, ${c}].`,
+                cargoPickup: (item) => `📦 Kargo berjaya diambil: ${item}`,
+                basket: "Tangki Oksigen 🫙",
+                medkit: "Modul Bahan Api 🔋",
+                resetLog: (lvl) => `🔄 Kanvas Peta ${lvl} & blok ruang kerja visual dibersihkan sepenuhnya!`,
+                startTracking: (lvl) => `✨ Memulakan sistem penjejakan Peta ${lvl}. Melancarkan rover...`,
+                runTrek: (lvl) => `🚀 Menjalankan trek logik Tahap ${lvl}...`,
+                brief1: `<strong>Protokol Keselamatan Aktif (Peta 1 - Permukaan Bulan):</strong> <br>
+                        1. Pergi ke Checkpoint pertama dan programkan 💡 \`LED ON\` dan 🔇 \`Buzzer OFF\`. <br>  
+                        2. Pergi ke Checkpoint kedua dan programkan 🔌 \`LED OFF\` dan 🔊 \`Buzzer ON\`. <br>
+                        3. Ambil kedua-dua unit kargo (📦) dan hantar ke stesen angkasa (🛰️).`,
+                brief2: `<strong>Protokol Keselamatan Aktif (Peta 2 - Medan Asteroid):</strong> <br>
+                        1. Pergi ke Checkpoint 3 dan programkan rover untuk 💡 \`LED ON\` dan 🔇 \`Buzzer OFF\` (Mod Kelipan Senyap).<br>
+                        2. Pergi ke Checkpoint 4 dan programkan rover untuk 💡 \`LED ON\` dan 🔊 \`Buzzer ON\` (Isyarat Kecemasan SOS).<br>
+                        3. Ambil kedua-dua unit kargo (📦) dan hantar ke stesen angkasa (🛰️).`,
+                brief3: `<strong>Protokol Keselamatan Aktif (Peta 3 - Planet Marikh - KETEGASAN MAKSIMUM):</strong> <br>
+                        1. Pergi ke Checkpoint 5 dan programkan rover untuk 🔌 \`LED OFF\` dan 🔇 \`Buzzer OFF\`.<br>
+                        2. Pergi ke Checkpoint 6 dan programkan rover untuk 💡 \`LED ON\` dan 🔇 \`Buzzer OFF\`.<br>
+                        3. Pergi ke Checkpoint 7 dan programkan rover untuk 💡 \`LED ON\` dan 🔊 \`Buzzer ON\`.<br>
+                        4. Ambil kedua-dua unit kargo (📦) dan hantar ke stesen angkasa (🛰️).`
+            },
+            EN: {
+                mainTitle: "FC-1 AI Challenge: Space Mission",
+                subTitle: "Autonomous Space Navigation Arena (Multi-Level Campaign)",
+                lblGroup: "PARTICIPANT NAME:",
+                placeholderGroup: "Enter Participant Name (Required)",
+                lblSchool: "SCHOOL NAME:",
+                placeholderSchool: "Enter School Name (Required)",
+                lblState: "STATE:",
+                optStateDefault: "-- Select State / Territory --",
+                howToPlayTitle: "📖 HOW TO PLAY:",
+                howToPlayList: `
+                    <li>Fill in your group profile above to begin the mission.</li>
+                    <li>Next, plan the movement path for the rover from the launch pad (bottom-left) to the Destination Space Station (🛰️).</li>
+                    <li>Use the movement block buttons in the control panel. You can change the value inside the brackets <strong>[...]</strong> to set multiple steps or turns at once.</li>
+                    <li>Make sure the rover stops by the Cargo grid (📦) to pick up supplies before reaching the space station.</li>
+                    <li>Ensure the rover also visits each Checkpoint (🟣) and executes the correct hardware commands (LED & Buzzer) according to the safety protocol requirements.</li>
+                    <li>⚠️ <strong>PROHIBITION ZONES / OBSTACLES:</strong> Avoid crashing into or entering dangerous obstacle tiles such as Radiation Zones (☢️), Meteor Rocks (🪨), Aliens (👽), or Hostile Drones (🛸). The rover will immediately suffer a mechanical failure (*CRASH*) if it enters these grids!</li>
+                    <li>Click the <strong>"RUN CODE BLOCKS"</strong> button to watch the rover navigate autonomously.</li>
+                `,
+                legendBox: `
+                    <div>🤖 Rover (With Arrow)</div>
+                    <div>🛰️ Destination Space Station</div>
+                    <div>📦 Cargo Supplies</div>
+                    <div>🟣 IoT Checkpoint</div>
+                    <div>☢️ Radiation Zone</div>
+                    <div>🪨 Hazards / Obstacles</div>
+                `,
+                criticalTimeTitle: "⏱️ MISSION TIMER:",
+                criticalTimeDesc: "The timer starts from 00:00 and counts upward until the mission is completed.",
+                criticalTimeList: `
+                    <li><strong>Map 1 - Moon:</strong> CP1 (LED On/Buzzer Off) | CP2 (LED Off/Buzzer On)</li>
+                    <li><strong>Map 2 - Asteroid Belt:</strong> CP3 (LED On/Buzzer Off) | CP4 (LED On/Buzzer On)</li>
+                    <li><strong>Map 3 - Mars:</strong> CP5 (All Off) | CP6 (LED On/Buzzer Off) | CP7 (All On)</li>
+                `,
+                btnStartMission: "▶ START MISSION",
+                leaderboardBtnLabel: "Leaderboard",
+                leaderboardTitle: "🏆 Leaderboard",
+                leaderboardNote: "Data is shared across all teams using this simulator.",
+                leaderboardNoteSheet: "☁️ Data synced live from Google Sheet — shared across all devices and teams.",
+                leaderboardNoteLocal: "⚠️ Local storage mode: records are only saved on this device/browser (not shared with other teams).",
+                leaderboardLoading: "⏳ Loading data...",
+                leaderboardEmpty: "No records yet. Be the first team to complete the mission!",
+                leaderboardRefresh: "🔄 Refresh",
+                leaderboardColRank: "#",
+                leaderboardColGroup: "Participant",
+                leaderboardColSchool: "School",
+                leaderboardColState: "State",
+                leaderboardColTime: "Time",
+                leaderboardSaveError: "⚠️ Failed to save to the leaderboard.",
+                leaderboardLoadError: "⚠️ Failed to load the leaderboard.",
+                gameHeaderTitle: "FC-1 AI Space Mission Simulator",
+                level1Badge: "LEVEL 1: LUNAR SURFACE",
+                level2Badge: "LEVEL 2: ASTEROID BELT",
+                level3Badge: "LEVEL 3: MARS OUTPOST",
+                displayGroup: "👥 Group:",
+                displayGuest: "Guest Team",
+                timeLeft: "⏱️ TIME TAKEN:",
+                timeElapsed: "⏱️ TIME ELAPSED:",
+                workspaceTitle: "🧱 Block Code Workspace",
+                placeholderEmptyCode: "Set values inside brackets & tap to compile...",
+                blockMoveForward: "🚶 move_forward",
+                blockTurnLeft: "↩️ turn_left_90_degree",
+                blockTurnRight: "↪️ turn_right_90_degree",
+                btnDeleteBlock: "⌫ Remove Block",
+                btnClearAll: "🗑️ Clear All",
+                execTitle: "Execution Control",
+                runBtn: "🚀 RUN CODE BLOCKS",
+                resetBtn: "🔄 RESET ROVER & MAP",
+                nextLevelBtn: "⏩ ADVANCE TO NEXT MAP",
+                menuBtn: "◀ BACK TO MAIN MENU",
+                telemetryTitle: "Telemetry Status Log",
+                lblInventory: "Cargo Inventory:",
+                lblLed: "Onboard LED:",
+                lblBuzzer: "Piezo Buzzer:",
+                cargoEmpty: "Empty",
+                sysInit: "System initialized...",
+                accessDenied: "⚠️ Access Denied: Please fill in all fields before launching the system!",
+                matriksVerified: "Mission matrix verified. Level 1 ready.",
+                timeoutLog: "🚨 Mission timer stopped.",
+                timeoutAlert: "❌ Mission stopped. System locked.",
+                levelPassed: (lvl) => `🎉 MAP ${lvl} PASSED SUCCESSFULLY!`,
+                levelPassedDesc: (lvl) => lvl === 1 ? "Access to Map 2 granted." : "Unlocking Level 3: Mars Outpost!",
+                levelFailed: (lvl) => `❌ FAILED: Safety protocol violation on Map ${lvl}! Milestone incomplete.`,
+                levelFailedOut: "❌ FAILED: Command blocks depleted before reaching the destination space station.",
+                levelFailedNoCargo: "❌ FAILED: Reached the space station without completing critical cargo collection!",
+                campaignSuccess: (time) => `🏆 SPACE MISSION FULLY COMPLETED! Total Time Taken: ${time}`,
+                cloudSuccess: "Congratulations, you have successfully completed this space mission!",
+                cloudError: "❌ Cloud Transmission Error: ",
+                boundaryCrash: "💥 VIOLATION: Crashed into outer space boundary! FAILED.",
+                obstacleCrash: (tile, r, c) => `💥 CRASH! Hit an obstacle (${tile}) at coordinates [${r}, ${c}].`,
+                cargoPickup: (item) => `📦 Cargo successfully collected: ${item}`,
+                basket: "Oxygen Tank 🫙",
+                medkit: "Fuel Module 🔋",
+                resetLog: (lvl) => `🔄 Map ${lvl} canvas & visual workspace blocks completely wiped!`,
+                startTracking: (lvl) => `✨ Starting Map ${lvl} tracking system. Launching rover...`,
+                runTrek: (lvl) => `🚀 Executing Level ${lvl} logic track...`,
+                brief1: `<strong>Active Safety Protocols (Map 1 - Lunar Surface):</strong> <br>
+                        1. Navigate to Checkpoint 1 and program 💡 \`LED ON\` and 🔇 \`Buzzer OFF\`. <br>  
+                        2. Navigate to Checkpoint 2 and program 🔌 \`LED OFF\` and 🔊 \`Buzzer ON\`. <br>
+                        3. Pick up both cargo units (📦) and safely deliver them to the space station (🛰️).`,
+                brief2: `<strong>Active Safety Protocols (Map 2 - Asteroid Belt):</strong> <br>
+                        1. Navigate to Checkpoint 3 and program the rover for 💡 \`LED ON\` and 🔇 \`Buzzer OFF\` (Silent Blink Mode).<br>
+                        2. Navigate to Checkpoint 4 and program the rover for 💡 \`LED ON\` and 🔊 \`Buzzer ON\` (SOS Emergency Beacon).<br>
+                        3. Pick up both cargo units (📦) and safely deliver them to the space station (🛰️).`,
+                brief3: `<strong>Active Safety Protocols (Map 3 - Mars Outpost - MAXIMUM STRICTNESS):</strong> <br>
+                        1. Navigate to Checkpoint 5 and program the rover for 🔌 \`LED OFF\` and 🔇 \`Buzzer OFF\`.<br>
+                        2. Navigate to Checkpoint 6 and program the rover for 💡 \`LED ON\` and 🔇 \`Buzzer OFF\`.<br>
+                        3. Navigate to Checkpoint 7 and program the rover for 💡 \`LED ON\` and 🔊 \`Buzzer ON\`.<br>
+                        4. Pick up both cargo units (📦) and safely deliver them to the space station (🛰️).`
+            }
+        };
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('btnLangMY').classList.toggle('active', lang === 'MY');
+            document.getElementById('btnLangEN').classList.toggle('active', lang === 'EN');
+
+            // Skrin Mula UI updates
+            document.getElementById('txtMainTitle').textContent = langData[lang].mainTitle;
+            document.getElementById('txtSubTitle').textContent = langData[lang].subTitle;
+            
+            // Labels & Placeholders
+            document.getElementById('lblGroup').innerHTML = langData[lang].lblGroup + '<span class="required-star">*</span>';
+            document.getElementById('groupNameInput').placeholder = langData[lang].placeholderGroup;
+            document.getElementById('lblSchool').innerHTML = langData[lang].lblSchool + '<span class="required-star">*</span>';
+            document.getElementById('schoolNameInput').placeholder = langData[lang].placeholderSchool;
+            document.getElementById('lblState').innerHTML = langData[lang].lblState + '<span class="required-star">*</span>';
+            document.getElementById('optStateDefault').textContent = langData[lang].optStateDefault;
+            
+            // Update Cara Bermain dynamically
+            document.getElementById('txtHowToPlayTitle').textContent = langData[lang].howToPlayTitle;
+            document.getElementById('txtHowToPlayList').innerHTML = langData[lang].howToPlayList;
+
+            document.getElementById('legendBox').innerHTML = langData[lang].legendBox;
+            document.getElementById('txtCriticalTimeTitle').textContent = langData[lang].criticalTimeTitle;
+            document.getElementById('txtCriticalTimeDesc').textContent = langData[lang].criticalTimeDesc;
+            document.getElementById('txtCriticalTimeList').innerHTML = langData[lang].criticalTimeList;
+            document.getElementById('btnStartMission').textContent = langData[lang].btnStartMission;
+            document.getElementById('txtLeaderboardBtnLabel').textContent = langData[lang].leaderboardBtnLabel;
+            document.getElementById('txtLeaderboardBtnLabel2').textContent = langData[lang].leaderboardBtnLabel;
+            document.getElementById('txtLeaderboardTitle').textContent = langData[lang].leaderboardTitle;
+            document.getElementById('txtLeaderboardNote').textContent = isGoogleSheetConfigured()
+                ? langData[lang].leaderboardNoteSheet
+                : (leaderboardUsesCloudStorage ? langData[lang].leaderboardNote : langData[lang].leaderboardNoteLocal);
+            document.getElementById('txtLeaderboardRefresh').textContent = langData[lang].leaderboardRefresh;
+
+            // Panel Utama UI updates
+            document.getElementById('txtGameHeaderTitle').textContent = langData[lang].gameHeaderTitle;
+            document.getElementById('lblDisplayGroup').textContent = langData[lang].displayGroup;
+            if(!currentGroupName) {
+                document.getElementById('displayGroupName').textContent = langData[lang].displayGuest;
+            }
+            document.getElementById('lblTimeLeft').textContent = langData[lang].timeLeft;
+            document.getElementById('lblTimeElapsed').textContent = langData[lang].timeElapsed;
+            
+            document.getElementById('txtWorkspaceTitle').textContent = langData[lang].workspaceTitle;
+            if (commandQueue.length === 0) {
+                document.getElementById('emptyCodePlaceholder').textContent = langData[lang].placeholderEmptyCode;
+            }
+            
+            document.getElementById('blockMoveForward').textContent = langData[lang].blockMoveForward;
+            document.getElementById('blockTurnLeft').textContent = langData[lang].blockTurnLeft;
+            document.getElementById('blockTurnRight').textContent = langData[lang].blockTurnRight;
+            
+            document.getElementById('btnDeleteBlock').textContent = langData[lang].btnDeleteBlock;
+            document.getElementById('btnClearAll').textContent = langData[lang].btnClearAll;
+            
+            document.getElementById('txtExecTitle').textContent = langData[lang].execTitle;
+            document.getElementById('runBtn').textContent = langData[lang].runBtn;
+            document.getElementById('resetBtn').textContent = langData[lang].resetBtn;
+            document.getElementById('nextLevelBtn').textContent = langData[lang].nextLevelBtn;
+            document.getElementById('menuBtn').textContent = langData[lang].menuBtn;
+            
+            document.getElementById('txtTelemetryTitle').textContent = langData[lang].telemetryTitle;
+            document.getElementById('lblInventory').textContent = langData[lang].lblInventory;
+            document.getElementById('lblLed').textContent = langData[lang].lblLed;
+            document.getElementById('lblBuzzer').textContent = langData[lang].lblBuzzer;
+            
+            if(inventory.length === 0) {
+                document.getElementById('cargoStatus').textContent = langData[lang].cargoEmpty;
+            }
+
+            setupLevelUI();
+            updateCodeBufferUI();
+            createGrid();
+        }
+
+        // ========================================================
+        // PAUTAN GOOGLE SHEET WEB APP URL YANG TELAH DIKEMAS KINI
+        // ========================================================
+        const GOOGLE_SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwW0fUlo-NZbm8b75Y56HBWwN3NHrHwnQ4jkRsUmdVSvyjxP2o2y6JgmLj4UTtHsHsKag/exec"; 
+
+        // Konfigurasi Susun Atur Peta
+        const mapOneLayout = [
+            ['0',  '0',  '0',  '0',  'W',  '0',  '0',  '0',  '0',  'SC'],
+            ['0',  'T',  '0',  'W',  'W',  '0',  'S',  '0',  '0',  '0'],
+            ['0',  '0',  '0',  'W',  '0',  '0',  '0',  'B',  '0',  '0'],
+            ['CP1','0',  '0',  '0',  '0',  'S',  '0',  '0',  '0',  '0'],
+            ['0',  '0',  'W',  'W',  '0',  '0',  '0',  'T',  '0',  '0'],
+            ['0',  'B',  'W',  'PK', '0',  '0',  'W',  '0',  '0',  '0'],
+            ['0',  '0',  'W',  '0',  '0',  'CP2','W',  '0',  '0',  '0'],
+            ['0',  'S',  '0',  '0',  '0',  '0',  '0',  'W',  '0',  '0'],
+            ['0',  '0',  '0',  'T',  '0',  'PK', '0',  'W',  'B',  '0'],
+            ['0',  '0',  '0',  '0',  '0',  '0',  '0',  '0',  '0',  '0']
+        ];
+
+        const mapTwoLayout = [
+            ['0',  '0',  '0',  '0',  '0',  '0',  '0',  'W',  '0',  'SC'],
+            ['0',  'B',  '0',  'S',  '0',  'T',  '0',  'W',  '0',  '0'],
+            ['0',  '0',  '0',  '0',  '0',  '0',  '0',  'W',  '0',  '0'],
+            ['W',  'W',  'CP4','0',  '0',  'S',  '0',  '0',  '0',  '0'],
+            ['0',  '0',  '0',  '0',  'T',  '0',  '0',  'B',  '0',  '0'],
+            ['0',  'PK', '0',  'W',  'W',  '0',  'CP3','0',  '0',  '0'],
+            ['0',  '0',  '0',  'W',  '0',  '0',  '0',  'S',  '0',  '0'],
+            ['T',  '0',  'B',  '0',  '0',  'W',  '0',  '0',  '0',  '0'],
+            ['0',  '0',  '0',  '0',  'PK', '0',  'W',  '0',  'T',  '0'],
+            ['0',  '0',  '0',  '0',  '0',  '0',  '0',  '0',  '0',  '0']
+        ];
+
+        const mapThreeLayout = [
+            ['0',  '0',  '0',  '0',  '0',  '0',  '0',  '0',  '0',  'SC'],
+            ['0',  'S',  '0',  'W',  '0',  'T',  '0',  'B',  '0',  '0'],
+            ['0',  '0',  '0',  'W',  '0',  '0',  '0',  'W',  '0',  '0'],
+            ['CP7','0',  '0',  'W',  '0',  'S',  '0',  'W',  '0',  '0'],
+            ['0',  '0',  'T',  '0',  '0',  '0',  '0',  '0',  '0',  '0'],
+            ['0',  'W',  'W',  '0',  'CP6','0',  'W',  'W',  '0',  '0'],
+            ['0',  '0',  'W',  '0',  '0',  '0',  'W',  '0',  '0',  '0'],
+            ['B',  '0',  '0',  'PK', '0',  'S',  '0',  '0',  'T',  '0'],
+            ['0',  '0',  'CP5','0',  '0',  '0',  'W',  '0',  'PK', '0'],
+            ['0',  '0',  '0',  '0',  '0',  '0',  '0',  '0',  '0',  '0']
+        ];
+
+        let currentLevel = 1; 
+        let gridLayout = [];
+        const assetMap = { 'W': '☢️', 'S': '🪨', 'T': '👽', 'B': '🛸', 'CP1': '🟣', 'CP2': '🟣', 'CP3': '🟣', 'CP4': '🟣', 'CP5': '🟣', 'CP6': '🟣', 'CP7': '🟣', 'PK': '📦', 'SC': '🛰️', '0': '' };
+
+        // Pembolehubah Bot
+        let robotPos = { r: 9, c: 2 }; 
+        let robotDir = 0; 
+        const directions = [ {r: -1, c: 0}, {r: 0, c: 1}, {r: 1, c: 0}, {r: 0, c: -1} ];
+        
+        let commandQueue = [];
+        let executionStepsList = []; 
+        let inventory = [];
+        let isRunning = false;
+        let executionIndex = 0;
+
+        // Pembolehubah Kumpulan
+        let currentGroupName = "";
+        let currentSchoolName = "";
+        let currentState = "";
+
+        // Penunjuk Pengesahan Keselamatan
+        let currentLED = false;
+        let currentBuzzer = false;
+        let passedCP1Correctly = false;
+        let passedCP2Correctly = false;
+        let passedCP3Correctly = false;
+        let passedCP4Correctly = false;
+        let passedCP5Correctly = false;
+        let passedCP6Correctly = false;
+        let passedCP7Correctly = false;
+
+        // Pembolehubah Kiraan Masa (Masa meningkat dari 00:00)
+        let totalSecondsElapsed = 0;
+        let timerInterval = null;
+        let isMissionFinished = false;
+
+        function startGame() {
+            let groupIn = document.getElementById('groupNameInput').value.trim();
+            let schoolIn = document.getElementById('schoolNameInput').value.trim();
+            let stateIn = document.getElementById('stateInput').value;
+
+            if (!groupIn || !schoolIn || !stateIn) {
+                alert(langData[currentLang].accessDenied);
+                return;
+            }
+
+
+            currentGroupName = groupIn;
+            currentSchoolName = schoolIn;
+            currentState = stateIn;
+
+            document.getElementById('displayGroupName').textContent = currentGroupName;
+            document.getElementById('displaySchool').textContent = currentSchoolName;
+            document.getElementById('displayState').textContent = currentState;
+
+            document.getElementById('splashScreen').style.display = 'none';
+            document.getElementById('mainGameWrapper').style.display = 'flex';
+            
+            currentLevel = 1;
+            setupLevelUI();
+            resetMissionVariables();
+            
+            document.getElementById('consoleLog').innerHTML = langData[currentLang].matriksVerified + "<br>";
+            createGrid();
+            startCountdownTimer();
+        }
+
+        function setupLevelUI() {
+            const briefBox = document.getElementById('missionBriefBox');
+            const badge = document.getElementById('currentLevelBadge');
+            const run = document.getElementById('runBtn');
+            const rst = document.getElementById('resetBtn');
+            const nxt = document.getElementById('nextLevelBtn');
+            const menu = document.getElementById('menuBtn');
+
+            if (currentLevel === 1) {
+                badge.textContent = langData[currentLang].level1Badge;
+                badge.style.backgroundColor = "#ff9800";
+                badge.style.color = "#000";
+                briefBox.innerHTML = langData[currentLang].brief1;
+                menu.style.display = 'none';
+                rst.style.display = 'block';
+                nxt.style.display = 'none';
+                run.style.display = 'block';
+            } else if (currentLevel === 2) {
+                badge.textContent = langData[currentLang].level2Badge;
+                badge.style.backgroundColor = "#0288d1";
+                badge.style.color = "#fff";
+                briefBox.innerHTML = langData[currentLang].brief2;
+                nxt.style.display = 'none';
+                run.style.display = 'block';
+                rst.style.display = 'block';
+            } else {
+                badge.textContent = langData[currentLang].level3Badge;
+                badge.style.backgroundColor = "#d32f2f";
+                badge.style.color = "#fff";
+                briefBox.innerHTML = langData[currentLang].brief3;
+                nxt.style.display = 'none';
+                run.style.display = 'block';
+                rst.style.display = 'block';
+            }
+        }
+
+        function resetMissionVariables() {
+            if (currentLevel === 1) gridLayout = JSON.parse(JSON.stringify(mapOneLayout));
+            else if (currentLevel === 2) gridLayout = JSON.parse(JSON.stringify(mapTwoLayout));
+            else gridLayout = JSON.parse(JSON.stringify(mapThreeLayout));
+
+            robotPos = { r: 9, c: 2 };
+            robotDir = 0;
+            inventory = [];
+            commandQueue = [];
+            executionStepsList = [];
+            passedCP1Correctly = false;
+            passedCP2Correctly = false;
+            passedCP3Correctly = false;
+            passedCP4Correctly = false;
+            passedCP5Correctly = false;
+            passedCP6Correctly = false;
+            passedCP7Correctly = false;
+            currentLED = false;
+            currentBuzzer = false;
+            updateCodeBufferUI();
+            document.getElementById('cargoStatus').textContent = langData[currentLang].cargoEmpty;
+            resetHardwareIndicators();
+        }
+
+        function startCountdownTimer() {
+            totalSecondsElapsed = 0;
+            isMissionFinished = false;
+            document.getElementById('timerContainer').classList.remove('time-warning');
+            document.getElementById('missionTimer').textContent = "00:00";
+            document.getElementById('elapsedTimer').textContent = "00:00";
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimerDisplays, 1000);
+        }
+
+        function updateTimerDisplays() {
+            if (isMissionFinished) return;
+
+            totalSecondsElapsed++;
+            let elMins = Math.floor(totalSecondsElapsed / 60).toString().padStart(2, '0');
+            let elSecs = (totalSecondsElapsed % 60).toString().padStart(2, '0');
+            let elapsedText = `${elMins}:${elSecs}`;
+
+            // Paparkan masa yang meningkat dari 00:00 pada timer utama
+            document.getElementById('missionTimer').textContent = elapsedText;
+            document.getElementById('elapsedTimer').textContent = elapsedText;
+        }
+
+        function handleMissionTimeoutFailure() {
+            clearInterval(timerInterval);
+            isMissionFinished = true;
+            isRunning = false;
+            
+            logToConsole(langData[currentLang].timeoutLog);
+            alert(langData[currentLang].timeoutAlert);
+            
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('runBtn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('nextLevelBtn').style.display = 'none';
+            document.getElementById('menuBtn').style.display = 'block';
+        }
+
+        function advanceToNextLevel() {
+            if (isMissionFinished) return;
+            currentLevel++;
+            setupLevelUI();
+            resetMissionVariables();
+            document.getElementById('runBtn').style.display = 'block';
+            document.getElementById('resetBtn').style.display = 'block';
+            document.getElementById('runBtn').disabled = false;
+            logToConsole(langData[currentLang].startTracking(currentLevel));
+            createGrid();
+        }
+
+        function returnToMainMenu() {
+            if(timerInterval) clearInterval(timerInterval);
+            document.getElementById('groupNameInput').value = '';
+            document.getElementById('schoolNameInput').value = '';
+            document.getElementById('stateInput').value = '';
+            currentGroupName = "";
+            
+            document.getElementById('mainGameWrapper').style.display = 'none';
+            document.getElementById('splashScreen').style.display = 'flex';
+            setLanguage(currentLang); 
+        }
+
+        function createGrid() {
+            const gridEl = document.getElementById('mapGrid');
+            if(!gridEl) return;
+            gridEl.innerHTML = '';
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    let type = gridLayout[r][c];
+                    
+                    if (type === 'W') cell.classList.add('river');
+                    else if (['T', 'B', 'S'].includes(type)) cell.classList.add('obstacle');
+                    else if (['CP1', 'CP2', 'CP3', 'CP4', 'CP5', 'CP6', 'CP7'].includes(type)) {
+                        cell.classList.add('checkpoint');
+                        if (type === 'CP1' && passedCP1Correctly) cell.classList.add('completed');
+                        if (type === 'CP2' && passedCP2Correctly) cell.classList.add('completed');
+                        if (type === 'CP3' && passedCP3Correctly) cell.classList.add('completed');
+                        if (type === 'CP4' && passedCP4Correctly) cell.classList.add('completed');
+                        if (type === 'CP5' && passedCP5Correctly) cell.classList.add('completed');
+                        if (type === 'CP6' && passedCP6Correctly) cell.classList.add('completed');
+                        if (type === 'CP7' && passedCP7Correctly) cell.classList.add('completed');
+                    }
+                    else if (type === 'PK') cell.classList.add('pickup');
+                    else if (type === 'SC') cell.classList.add('destination');
+
+                    if (robotPos.r === r && robotPos.c === c) {
+                        const container = document.createElement('div');
+                        container.className = 'minibot-container';
+                        container.style.transform = `rotate(${robotDir * 90}deg)`;
+
+                        const arrow = document.createElement('div');
+                        arrow.className = 'minibot-arrow';
+                        arrow.innerHTML = '↑'; 
+
+                        const bot = document.createElement('div');
+                        bot.className = 'minibot-sprite';
+                        bot.innerHTML = '🤖';
+
+                        container.appendChild(arrow);
+                        container.appendChild(bot);
+                        cell.appendChild(container);
+                    } else {
+                        cell.innerHTML = assetMap[type] || '';
+                    }
+
+                    if (['CP1', 'CP2', 'CP3', 'CP4', 'CP5', 'CP6', 'CP7'].includes(type)) {
+                        let badge = document.createElement('div');
+                        let done = false;
+                        let lbl = '';
+                        
+                        if (currentLang === "MY") {
+                            if (type === 'CP1') { done = passedCP1Correctly; lbl = 'CP Ke-1'; }
+                            if (type === 'CP2') { done = passedCP2Correctly; lbl = 'CP Ke-2'; }
+                            if (type === 'CP3') { done = passedCP3Correctly; lbl = 'CP Ke-3'; }
+                            if (type === 'CP4') { done = passedCP4Correctly; lbl = 'CP Ke-4'; }
+                            if (type === 'CP5') { done = passedCP5Correctly; lbl = 'CP Ke-5'; }
+                            if (type === 'CP6') { done = passedCP6Correctly; lbl = 'CP Ke-6'; }
+                            if (type === 'CP7') { done = passedCP7Correctly; lbl = 'CP Ke-7'; }
+                        } else {
+                            if (type === 'CP1') { done = passedCP1Correctly; lbl = '1st CP'; }
+                            if (type === 'CP2') { done = passedCP2Correctly; lbl = '2nd CP'; }
+                            if (type === 'CP3') { done = passedCP3Correctly; lbl = '3rd CP'; }
+                            if (type === 'CP4') { done = passedCP4Correctly; lbl = '4th CP'; }
+                            if (type === 'CP5') { done = passedCP5Correctly; lbl = '5th CP'; }
+                            if (type === 'CP6') { done = passedCP6Correctly; lbl = '6th CP'; }
+                            if (type === 'CP7') { done = passedCP7Correctly; lbl = '7th CP'; }
+                        }
+
+                        badge.className = done ? 'cp-label done' : 'cp-label';
+                        badge.innerText = done ? `✅ ${type} OK` : `🟣 ${lbl}`;
+                        cell.appendChild(badge);
+                    }
+
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function addParametricBlock(type, inputId) {
+            if (isRunning || isMissionFinished) return;
+            let bracketField = document.getElementById(inputId);
+            let stepsCount = parseInt(bracketField.value) || 1;
+            if (stepsCount < 1) stepsCount = 1;
+            
+            commandQueue.push({ type: type, value: stepsCount });
+            updateCodeBufferUI();
+            scrollBufferToBottom();
+        }
+
+        function addHardwareCommand(type) {
+            if (isRunning || isMissionFinished) return;
+            commandQueue.push({ type: type, value: 1 });
+            updateCodeBufferUI();
+            scrollBufferToBottom();
+        }
+
+        function scrollBufferToBottom() {
+            setTimeout(() => {
+                const container = document.getElementById('codeQueue');
+                if(container) container.scrollTop = container.scrollHeight;
+            }, 50);
+        }
+
+        function deleteLastCommand() {
+            if (isRunning || isMissionFinished) return;
+            if (commandQueue.length > 0) {
+                commandQueue.pop();
+                updateCodeBufferUI();
+                logToConsole(currentLang === "MY" ? "Blok visual terakhir dibuang." : "Last visual block removed.");
+            }
+        }
+
+        function clearCodeBuffer() {
+            if (isRunning || isMissionFinished) return;
+            commandQueue = [];
+            updateCodeBufferUI();
+            logToConsole(currentLang === "MY" ? "Kanvas ruang kerja telah dipadam." : "Workspace canvas cleared.");
+        }
+
+        function updateCodeBufferUI() {
+            const container = document.getElementById('codeQueue');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            if (commandQueue.length === 0) {
+                container.innerHTML = `<span style="color:#777; font-size:12px; margin: auto;" id="emptyCodePlaceholder">${langData[currentLang].placeholderEmptyCode}</span>`;
+                return;
+            }
+            
+            container.innerHTML = commandQueue.map((item, i) => {
+                let blockClass = '';
+                let text = '';
+                let cmd = item.type;
+                let val = item.value;
+                
+                if (['forward', 'left', 'right'].includes(cmd)) {
+                    blockClass = 'block-code-item block-nav';
+                    if (cmd === 'forward') text = `🚶 move_forward ( <span style="color:#ffeb3b;">${val}</span> )`;
+                    if (cmd === 'left') text = `↩️ turn_left_90_degree ( <span style="color:#ffeb3b;">${val}</span> )`;
+                    if (cmd === 'right') text = `↪️ turn_right_90_degree ( <span style="color:#ffeb3b;">${val}</span> )`;
+                } else if (['led_on', 'buzzer_on'].includes(cmd)) {
+                    blockClass = 'block-code-item block-hw-on';
+                    if (cmd === 'led_on') text = '💡 turn_led_on ( )';
+                    if (cmd === 'buzzer_on') text = '🔊 trigger_buzzer_on ( )';
+                } else {
+                    blockClass = 'block-code-item block-hw-off';
+                    if (cmd === 'led_off') text = '🔌 turn_led_off ( )';
+                    if (cmd === 'buzzer_off') text = '🔇 trigger_buzzer_off ( )';
+                }
+
+                return `<div class="${blockClass}"><span class="block-index">${i + 1}</span> ${text}</div>`;
+            }).join('');
+        }
+
+        function logToConsole(message) {
+            const logBox = document.getElementById('consoleLog');
+            if(logBox) {
+                logBox.innerHTML += `> ${message}<br>`;
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        }
+
+        function runProgram() {
+            if (isRunning || isMissionFinished) return;
+            if (commandQueue.length === 0) {
+                logToConsole(currentLang === "MY" ? "❌ Ralat: Kanvas ruang kerja adalah kosong!" : "❌ Error: Workspace canvas is empty!");
+                return;
+            }
+
+            executionStepsList = [];
+            commandQueue.forEach(block => {
+                for(let k = 0; k < block.value; k++) {
+                    executionStepsList.push(block.type);
+                }
+            });
+
+            isRunning = true;
+            executionIndex = 0;
+            document.getElementById('runBtn').disabled = true;
+            logToConsole(langData[currentLang].runTrek(currentLevel));
+            executeNextStep();
+        }
+
+        function executeNextStep() {
+            if (isMissionFinished) return; 
+            
+            if (executionIndex >= executionStepsList.length) {
+                evaluateMissionStatus(true); 
+                return;
+            }
+
+            let currentCmd = executionStepsList[executionIndex];
+            executionIndex++;
+
+            if (currentCmd === 'left') {
+                robotDir = (robotDir + 3) % 4; 
+                logToConsole("turn_left_90_degree()");
+            } else if (currentCmd === 'right') {
+                robotDir = (robotDir + 1) % 4; 
+                logToConsole("turn_right_90_degree()");
+            } else if (currentCmd === 'forward') {
+                let nextR = robotPos.r + directions[robotDir].r;
+                let nextC = robotPos.c + directions[robotDir].c;
+
+                if (nextR < 0 || nextR >= 10 || nextC < 0 || nextC >= 10) {
+                    logToConsole(langData[currentLang].boundaryCrash);
+                    terminateExecution();
+                    return;
+                }
+
+                let nextTile = gridLayout[nextR][nextC];
+
+                if (['T', 'B', 'S', 'W'].includes(nextTile)) {
+                    logToConsole(langData[currentLang].obstacleCrash(assetMap[nextTile], nextR, nextC));
+                    terminateExecution();
+                    return;
+                }
+
+                robotPos.r = nextR;
+                robotPos.c = nextC;
+                logToConsole(`move_forward() ➔ [${nextR}, ${nextC}]`);
+                
+                handleTileInteractions(nextTile, nextR, nextC);
+            } 
+            else if (['led_on', 'led_off', 'buzzer_on', 'buzzer_off'].includes(currentCmd)) {
+                handleHardwareCommands(currentCmd);
+            }
+
+            checkInstantCheckpointCompliance();
+            createGrid();
+
+            if (gridLayout[robotPos.r][robotPos.c] === 'SC') {
+                evaluateMissionStatus(false);
+                return;
+            }
+
+            setTimeout(executeNextStep, 420);
+        }
+
+        function handleHardwareCommands(cmd) {
+            if (cmd === 'led_on') {
+                currentLED = true;
+                document.getElementById('ledIndicator').className = "indicator status-led-on";
+                document.getElementById('ledIndicator').textContent = "ON";
+            } else if (cmd === 'led_off') {
+                currentLED = false;
+                document.getElementById('ledIndicator').className = "indicator status-off";
+                document.getElementById('ledIndicator').textContent = "OFF";
+            } else if (cmd === 'buzzer_on') {
+                currentBuzzer = true;
+                document.getElementById('buzzerIndicator').className = "indicator status-buzzer-on";
+                document.getElementById('buzzerIndicator').textContent = "BEEP";
+            } else if (cmd === 'buzzer_off') {
+                currentBuzzer = false;
+                document.getElementById('buzzerIndicator').className = "indicator status-off";
+                document.getElementById('buzzerIndicator').textContent = "OFF";
+            }
+            logToConsole(`Hardware switch executed: ${cmd}()`);
+        }
+
+        function checkInstantCheckpointCompliance() {
+            let activeTile = gridLayout[robotPos.r][robotPos.c];
+            
+            if (currentLevel === 1) {
+                if (activeTile === 'CP1' && currentLED && !currentBuzzer) passedCP1Correctly = true;
+                if (activeTile === 'CP2' && !currentLED && currentBuzzer) passedCP2Correctly = true;
+            } else if (currentLevel === 2) {
+                if (activeTile === 'CP3' && currentLED && !currentBuzzer) passedCP3Correctly = true;
+                if (activeTile === 'CP4' && currentLED && currentBuzzer) passedCP4Correctly = true;
+            } else {
+                if (activeTile === 'CP5' && !currentLED && !currentBuzzer) passedCP5Correctly = true;
+                if (activeTile === 'CP6' && currentLED && !currentBuzzer) passedCP6Correctly = true;
+                if (activeTile === 'CP7' && currentLED && currentBuzzer) passedCP7Correctly = true;
+            }
+        }
+
+        function handleTileInteractions(type, r, c) {
+            if (type === 'PK') {
+                let item = inventory.length === 0 ? langData[currentLang].basket : langData[currentLang].medkit;
+                if (!inventory.includes(item)) {
+                    inventory.push(item);
+                    gridLayout[r][c] = '0'; 
+                    document.getElementById('cargoStatus').textContent = inventory.join(" & ");
+                    logToConsole(langData[currentLang].cargoPickup(item));
+                }
+            }
+        }
+
+        function evaluateMissionStatus(outOfCommands) {
+            let onSchool = (gridLayout[robotPos.r][robotPos.c] === 'SC');
+            
+            if (onSchool) {
+                if (inventory.length < 2) {
+                    logToConsole(langData[currentLang].levelFailedNoCargo);
+                    terminateExecution();
+                    return;
+                } 
+
+                if (currentLevel === 1) {
+                    if (!passedCP1Correctly || !passedCP2Correctly) {
+                        logToConsole(langData[currentLang].levelFailed(1));
+                        terminateExecution();
+                    } else {
+                        logToConsole(langData[currentLang].levelPassed(1) + " " + langData[currentLang].levelPassedDesc(1));
+                        isRunning = false;
+                        document.getElementById('runBtn').style.display = 'none';
+                        document.getElementById('resetBtn').style.display = 'none';
+                        document.getElementById('nextLevelBtn').style.display = 'block';
+                    }
+                } else if (currentLevel === 2) {
+                    if (!passedCP3Correctly || !passedCP4Correctly) {
+                        logToConsole(langData[currentLang].levelFailed(2));
+                        terminateExecution();
+                    } else {
+                        logToConsole(langData[currentLang].levelPassed(2) + " " + langData[currentLang].levelPassedDesc(2));
+                        isRunning = false;
+                        document.getElementById('runBtn').style.display = 'none';
+                        document.getElementById('resetBtn').style.display = 'none';
+                        document.getElementById('nextLevelBtn').style.display = 'block';
+                    }
+                } else {
+                    if (!passedCP5Correctly || !passedCP6Correctly || !passedCP7Correctly) {
+                        logToConsole(langData[currentLang].levelFailed(3));
+                        terminateExecution();
+                    } else {
+                        clearInterval(timerInterval); 
+                        isMissionFinished = true;
+                        
+                        let elapsedTimeText = document.getElementById('missionTimer').textContent;
+                        
+                        logToConsole(langData[currentLang].campaignSuccess(elapsedTimeText));
+                        
+                        sendDataToGoogleSheet(currentGroupName, currentSchoolName, currentState, elapsedTimeText, totalSecondsElapsed);
+                        saveLeaderboardEntry(currentGroupName, currentSchoolName, currentState, elapsedTimeText, totalSecondsElapsed);
+
+                        document.getElementById('runBtn').style.display = 'none';
+                        document.getElementById('resetBtn').style.display = 'none';
+                        document.getElementById('nextLevelBtn').style.display = 'none';
+                        document.getElementById('menuBtn').style.display = 'block';
+                    }
+                }
+            } else if (outOfCommands) {
+                logToConsole(langData[currentLang].levelFailedOut);
+                terminateExecution();
+            }
+        }
+
+        function sendDataToGoogleSheet(groupName, school, state, timeText, timeSeconds) {
+            if (!GOOGLE_SHEET_WEBAPP_URL || GOOGLE_SHEET_WEBAPP_URL.includes("ISI_URL_WEB_APP")) {
+                logToConsole("⚠️ Note: Google Sheet Web App URL not configured. Data not cloud-saved.");
+                return;
+            }
+
+            const payload = {
+                name: groupName,
+                school: school,
+                state: state,
+                timeText: timeText,
+                timeSeconds: timeSeconds
+            };
+
+            fetch(GOOGLE_SHEET_WEBAPP_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                cache: "no-cache",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                logToConsole(langData[currentLang].cloudSuccess);
+            })
+            .catch(error => {
+                logToConsole(langData[currentLang].cloudError + error);
+            });
+        }
+
+        // ========================================================
+        // PAPAN PENDAHULU (LEADERBOARD) - Storan dikongsi (shared)
+        // Guna window.storage bila tersedia (pratonton Claude).
+        // Jika dibuka sebagai fail HTML biasa (competition day),
+        // window.storage tiada -> fallback automatik ke localStorage
+        // pelayar (data kekal di peranti/pelayar yang sama sahaja).
+        // ========================================================
+        const LEADERBOARD_KEY = "fc1-space-leaderboard";
+        let leaderboardUsesCloudStorage = !!(window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function');
+
+        function isGoogleSheetConfigured() {
+            return GOOGLE_SHEET_WEBAPP_URL && !GOOGLE_SHEET_WEBAPP_URL.includes("ISI_URL_WEB_APP");
+        }
+
+        function parseTimeTextToSeconds(text) {
+            if (!text) return 999999;
+            const parts = String(text).split(':').map(n => parseInt(n, 10) || 0);
+            if (parts.length === 2) return parts[0] * 60 + parts[1];
+            if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            return 999999;
+        }
+
+        function formatSecondsToTime(totalSeconds) {
+            const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+            const mins = Math.floor(s / 60).toString().padStart(2, '0');
+            const secs = (s % 60).toString().padStart(2, '0');
+            return `${mins}:${secs}`;
+        }
+
+        // Cuba selamatkan rekod lama yang tersimpan rosak sebagai tarikh oleh Google
+        // Sheets (cth: "1899-12-30T01:11:35.000Z") sebelum pembetulan ini dipasang.
+        function recoverLegacyCorruptedTime(value) {
+            if (typeof value !== 'string') return null;
+            const match = value.match(/^1899-12-30T(\d{2}):(\d{2}):(\d{2})/);
+            if (match) {
+                return `${match[1]}:${match[2]}`;
+            }
+            return null;
+        }
+
+        async function lbStorageGet(key, shared) {
+            if (leaderboardUsesCloudStorage) {
+                return await window.storage.get(key, shared);
+            }
+            const raw = localStorage.getItem(key);
+            if (raw === null) throw new Error("Key not found in localStorage");
+            return { key, value: raw, shared };
+        }
+
+        async function lbStorageSet(key, value, shared) {
+            if (leaderboardUsesCloudStorage) {
+                return await window.storage.set(key, value, shared);
+            }
+            localStorage.setItem(key, value);
+            return { key, value, shared };
+        }
+
+        async function saveLeaderboardEntry(groupName, school, state, timeText, timeSeconds) {
+            try {
+                let entries = [];
+                try {
+                    const existing = await lbStorageGet(LEADERBOARD_KEY, true);
+                    if (existing && existing.value) {
+                        entries = JSON.parse(existing.value);
+                    }
+                } catch (readErr) {
+                    entries = [];
+                }
+
+                entries.push({
+                    group: groupName,
+                    school: school,
+                    state: state,
+                    timeText: timeText,
+                    timeSeconds: timeSeconds,
+                    ts: Date.now()
+                });
+
+                entries.sort((a, b) => a.timeSeconds - b.timeSeconds);
+                entries = entries.slice(0, 100);
+
+                await lbStorageSet(LEADERBOARD_KEY, JSON.stringify(entries), true);
+                logToConsole(leaderboardUsesCloudStorage
+                    ? "🏆 Rekod disimpan ke papan pendahulu dikongsi."
+                    : "🏆 Rekod disimpan ke papan pendahulu (storan tempatan peranti ini sahaja).");
+            } catch (err) {
+                logToConsole(langData[currentLang].leaderboardSaveError + " " + err);
+            }
+        }
+
+        function openLeaderboard() {
+            document.getElementById('leaderboardOverlay').classList.add('active');
+            loadLeaderboard();
+        }
+
+        function closeLeaderboard() {
+            document.getElementById('leaderboardOverlay').classList.remove('active');
+        }
+
+        async function loadLeaderboard() {
+            const contentEl = document.getElementById('leaderboardContent');
+            contentEl.innerHTML = `<div class="leaderboard-loading">${langData[currentLang].leaderboardLoading}</div>`;
+
+            // 1) Cuba Google Sheet dahulu jika URL Web App telah dikonfigurasi (dikongsi merentas semua peranti)
+            if (isGoogleSheetConfigured()) {
+                try {
+                    const response = await fetch(GOOGLE_SHEET_WEBAPP_URL + "?action=leaderboard", { method: "GET" });
+                    const rawData = await response.json();
+                    const entries = (Array.isArray(rawData) ? rawData : []).map(row => {
+                        let seconds = Number(row.timeSeconds);
+                        let text = row.timeText || row.timeElapsed || row.timeLeft || "";
+
+                        if (!seconds || isNaN(seconds)) {
+                            // Rekod lama tanpa lajur timeSeconds - cuba selamatkan daripada nilai tarikh rosak
+                            const recovered = recoverLegacyCorruptedTime(text);
+                            if (recovered) {
+                                text = recovered;
+                            }
+                            seconds = parseTimeTextToSeconds(text);
+                        } else {
+                            text = formatSecondsToTime(seconds);
+                        }
+
+                        return {
+                            group: row.name || row.group || "",
+                            school: row.school || "",
+                            state: row.state || "",
+                            timeText: text,
+                            timeSeconds: seconds
+                        };
+                    });
+                    renderLeaderboard(entries);
+                    return;
+                } catch (sheetErr) {
+                    logToConsole("⚠️ Gagal baca Google Sheet, cuba storan sandaran... " + sheetErr);
+                    // jatuh terus ke storan sandaran di bawah
+                }
+            }
+
+            // 2) Fallback: window.storage (pratonton Claude) atau localStorage (peranti ini sahaja)
+            try {
+                let entries = [];
+                try {
+                    const existing = await lbStorageGet(LEADERBOARD_KEY, true);
+                    if (existing && existing.value) {
+                        entries = JSON.parse(existing.value);
+                    }
+                } catch (readErr) {
+                    entries = [];
+                }
+
+                renderLeaderboard(entries);
+            } catch (err) {
+                contentEl.innerHTML = `<div class="leaderboard-loading">${langData[currentLang].leaderboardLoadError}</div>`;
+            }
+        }
+
+        function renderLeaderboard(entries) {
+            const contentEl = document.getElementById('leaderboardContent');
+            const L = langData[currentLang];
+
+            if (!entries || entries.length === 0) {
+                contentEl.innerHTML = `<div class="leaderboard-empty">${L.leaderboardEmpty}</div>`;
+                return;
+            }
+
+            entries.sort((a, b) => a.timeSeconds - b.timeSeconds);
+
+            let rowsHtml = entries.map((e, i) => {
+                const rank = i + 1;
+                let rankClass = rank <= 3 ? `rank-${rank}` : '';
+                let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+                return `<tr class="${rankClass}">
+                    <td>${medal}</td>
+                    <td>${escapeHtml(e.group)}</td>
+                    <td>${escapeHtml(e.school)}</td>
+                    <td>${escapeHtml(e.state)}</td>
+                    <td>${escapeHtml(e.timeText)}</td>
+                </tr>`;
+            }).join('');
+
+            contentEl.innerHTML = `
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>${L.leaderboardColRank}</th>
+                            <th>${L.leaderboardColGroup}</th>
+                            <th>${L.leaderboardColSchool}</th>
+                            <th>${L.leaderboardColState}</th>
+                            <th>${L.leaderboardColTime}</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
+        }
+
+        function terminateExecution() {
+            isRunning = false;
+            if (!isMissionFinished) {
+                document.getElementById('runBtn').disabled = false;
+            }
+        }
+
+        function resetHardwareIndicators() {
+            document.getElementById('ledIndicator').className = "indicator status-off";
+            document.getElementById('ledIndicator').textContent = "OFF";
+            document.getElementById('buzzerIndicator').className = "indicator status-off";
+            document.getElementById('buzzerIndicator').textContent = "OFF";
+        }
+
+        function resetSimulation() {
+            if (isMissionFinished) return;
+            isRunning = false;
+            document.getElementById('runBtn').disabled = false;
+            
+            commandQueue = [];
+            resetMissionVariables();
+            createGrid();
+            
+            logToConsole(langData[currentLang].resetLog(currentLevel));
+        }
+
+        // Initialize view
+        window.onload = () => {
+            setLanguage('MY');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permainan Dron: Cabaran Pelbagai Laluan</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eceff1;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        h2 { margin-top: 0; color: #333; }
+
+        /* Skrin Mula & Borang */
+        #start-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #282c34;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #start-screen h1 { font-size: 3em; margin-bottom: 10px; color: #61dafb; text-align: center; }
+        #start-screen p { font-size: 1.2em; margin-bottom: 20px; color: #abb2bf; text-align: center; }
+        
+        .registration-form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 350px;
+            margin-bottom: 30px;
+        }
+
+        .registration-form input {
+            padding: 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .btn-start-game {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            width: 100%;
+        }
+        .btn-start-game:hover { background-color: #45a049; transform: scale(1.02); }
+
+        /* Bekas Utama Permainan */
+        #main-wrapper {
+            display: none;
+            gap: 20px;
+        }
+        
+        #game-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        canvas {
+            background-color: #e8f5e9;
+            border: 2px solid #81c784;
+            border-radius: 5px;
+        }
+
+        /* Panel Kawalan */
+        #control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Paparan Maklumat Peserta & Pemasa */
+        #player-info {
+            background: #e3f2fd;
+            color: #0d47a1;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            border: 1px solid #90caf9;
+        }
+
+        #timer-display {
+            background: #111;
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 24px;
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 2px solid #333;
+        }
+
+        .blocks-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-block {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-block:hover { background-color: #45a049; }
+        .btn-block.takeoff { background-color: #8d6e63; grid-column: span 2; }
+        .btn-block.takeoff:hover { background-color: #6d4c41; }
+
+        #program-list {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            min-height: 150px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin-bottom: 15px;
+            overflow-y: auto;
+            max-height: 220px;
+        }
+
+        .program-item {
+            margin: 5px 0;
+            padding-left: 10px;
+            border-left: 3px solid #61dafb;
+        }
+
+        .action-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-action {
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 13px;
+        }
+        
+        .btn-undo { background-color: #ff9800; }
+        .btn-undo:hover { background-color: #f57c00; }
+        .btn-clear { background-color: #f44336; }
+        .btn-clear:hover { background-color: #d32f2f; }
+        .btn-run { background-color: #2196F3; grid-column: span 2; font-size: 15px; padding: 15px;}
+        .btn-run:hover { background-color: #1976D2; }
+        
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #555;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <h1>Simulator Pengaturcaraan Dron</h1>
+        <p>Sila masukkan maklumat anda sebelum mula.</p>
+        
+        <div class="registration-form">
+            <input type="text" id="inputName" placeholder="Nama Penuh (Cth: Ali Bin Abu)" required>
+            <input type="text" id="inputSchool" placeholder="Nama Sekolah (Cth: SMK Maju)" required>
+            <button class="btn-start-game" onclick="startGame()">MULA PERMAINAN</button>
+        </div>
+    </div>
+
+    <div id="main-wrapper">
+        <div id="game-container">
+            <h2>Peta Pelbagai Laluan</h2>
+            <canvas id="droneCanvas" width="500" height="500"></canvas>
+            <div id="status">Status: Mendarat | Ketinggian: 0</div>
+        </div>
+
+        <div id="control-panel">
+            <div id="player-info">
+                <div id="display-name">Nama: -</div>
+                <div id="display-school">Sekolah: -</div>
+            </div>
+
+            <div id="timer-display">Masa: 0s</div>
+            <h2>Blok Arahan</h2>
+            <div class="blocks-grid">
+                <button class="btn-block takeoff" onclick="addCommand('takeoff')">takeoff</button>
+                <button class="btn-block" onclick="addCommand('forward')">forward</button>
+                <button class="btn-block" onclick="addCommand('backward')">backward</button>
+                <button class="btn-block" onclick="addCommand('left')">left</button>
+                <button class="btn-block" onclick="addCommand('right')">right</button>
+                <button class="btn-block" onclick="addCommand('up')">up</button>
+                <button class="btn-block" onclick="addCommand('down')">down</button>
+            </div>
+
+            <h3>Program Anda:</h3>
+            <div id="program-list"></div>
+
+            <div class="action-btns">
+                <button class="btn-action btn-undo" onclick="undoCommand()">Undo (Padam 1)</button>
+                <button class="btn-action btn-clear" onclick="clearProgram()">Padam Semua</button>
+                <button class="btn-action btn-run" onclick="runProgram()">Jalankan Program!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('droneCanvas');
+        const ctx = canvas.getContext('2d');
+        const programList = document.getElementById('program-list');
+        const statusText = document.getElementById('status');
+        const timerDisplay = document.getElementById('timer-display');
+
+        const gridSize = 50;
+        const cols = 10;
+        const rows = 10;
+
+        let commands = [];
+        let isRunning = false;
+        
+        let playerName = "";
+        let playerSchool = "";
+        let timerInterval;
+        let secondsElapsed = 0;
+        let isTimerRunning = false;
+
+        const startPos = { x: 1, y: 8 }; 
+        const endPos = { x: 8, y: 1 };
+
+        let drone = { gx: startPos.x, gy: startPos.y, z: 0, isFlying: false };
+
+        const obstacles = [
+            // Blok kiri atas
+            {x: 1, y: 4}, {x: 2, y: 4}, {x: 3, y: 4}, {x: 4, y: 4},
+            // Blok bawah
+            {x: 4, y: 7}, {x: 4, y: 8}, {x: 4, y: 9},
+            // Halangan bertebaran di kanan
+            {x: 6, y: 5}, {x: 7, y: 5}, {x: 8, y: 5},
+            // Tembok pelindung titik TAMAT
+            {x: 6, y: 2}, {x: 7, y: 2}, {x: 8, y: 2},
+            // Halangan kecil rawak
+            {x: 2, y: 1}, {x: 2, y: 2}
+        ];
+
+        function startGame() {
+            playerName = document.getElementById('inputName').value.trim();
+            playerSchool = document.getElementById('inputSchool').value.trim();
+
+            if (playerName === "" || playerSchool === "") {
+                alert("Sila isi Nama Penuh dan Nama Sekolah anda terlebih dahulu!");
+                return;
+            }
+
+            document.getElementById('display-name').innerText = `Nama: ${playerName}`;
+            document.getElementById('display-school').innerText = `Sekolah: ${playerSchool}`;
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('main-wrapper').style.display = 'flex';
+            draw();
+            
+            secondsElapsed = 0;
+            isTimerRunning = true;
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                timerDisplay.innerText = `Masa: ${secondsElapsed}s`;
+            }, 1000);
+        }
+
+        function resetDrone() {
+            drone = { gx: startPos.x, gy: startPos.y, z: 0, isFlying: false };
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Grid
+            ctx.strokeStyle = '#c8e6c9';
+            ctx.lineWidth = 1;
+            for(let i=0; i<=cols; i++) {
+                ctx.beginPath(); ctx.moveTo(i*gridSize, 0); ctx.lineTo(i*gridSize, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i*gridSize); ctx.lineTo(canvas.width, i*gridSize); ctx.stroke();
+            }
+
+            // Halangan
+            ctx.fillStyle = '#607d8b';
+            obstacles.forEach(obs => {
+                ctx.fillRect(obs.x * gridSize, obs.y * gridSize, gridSize, gridSize);
+                ctx.strokeStyle = '#455a64';
+                ctx.strokeRect(obs.x * gridSize, obs.y * gridSize, gridSize, gridSize);
+            });
+
+            // MULA
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(startPos.x * gridSize, startPos.y * gridSize, gridSize, gridSize);
+            ctx.fillStyle = 'white'; ctx.font = '20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('MULA', startPos.x * gridSize + 25, startPos.y * gridSize + 25);
+
+            // TAMAT
+            ctx.fillStyle = '#FFC107';
+            ctx.fillRect(endPos.x * gridSize, endPos.y * gridSize, gridSize, gridSize);
+            ctx.fillStyle = 'black'; ctx.fillText('TAMAT', endPos.x * gridSize + 25, endPos.y * gridSize + 25);
+
+            // Dron
+            let px = (drone.gx * gridSize) + (gridSize / 2);
+            let py = (drone.gy * gridSize) + (gridSize / 2);
+            let scale = 1 + (drone.z / 50);
+            
+            if (drone.isFlying) {
+                ctx.beginPath();
+                ctx.arc(px, py, 15, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.fill();
+            }
+
+            ctx.beginPath(); ctx.arc(px, py, 10 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = '#212121'; ctx.fill();
+
+            const propDist = 12 * scale;
+            const propSize = 7 * scale;
+            ctx.fillStyle = '#f44336';
+            ctx.beginPath(); ctx.arc(px - propDist, py - propDist, propSize, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(px + propDist, py - propDist, propSize, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#2196F3';
+            ctx.beginPath(); ctx.arc(px - propDist, py + propDist, propSize, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(px + propDist, py + propDist, propSize, 0, Math.PI*2); ctx.fill();
+
+            statusText.innerText = `Status: ${drone.isFlying ? 'Terbang' : 'Mendarat'} | Ketinggian: ${drone.z}`;
+        }
+
+        function addCommand(cmd) {
+            if (isRunning || !isTimerRunning) return;
+            commands.push(cmd);
+            updateProgramUI();
+        }
+
+        function undoCommand() {
+            if (isRunning || commands.length === 0 || !isTimerRunning) return;
+            commands.pop();
+            updateProgramUI();
+        }
+
+        function updateProgramUI() {
+            programList.innerHTML = '';
+            commands.forEach((cmd, index) => {
+                const div = document.createElement('div');
+                div.className = 'program-item';
+                div.innerText = `${index + 1}. ${cmd}();`;
+                programList.appendChild(div);
+            });
+            programList.scrollTop = programList.scrollHeight;
+        }
+
+        function clearProgram() {
+            if (isRunning || !isTimerRunning) return;
+            commands = [];
+            updateProgramUI();
+            resetDrone();
+        }
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function runProgram() {
+            if (commands.length === 0 || isRunning || !isTimerRunning) return;
+            
+            drone.gx = startPos.x;
+            drone.gy = startPos.y;
+            drone.z = 0;
+            drone.isFlying = false;
+            draw();
+            await sleep(500);
+
+            isRunning = true;
+
+            if (commands[0] !== 'takeoff') {
+                alert("Ralat: Dron mesti 'takeoff' terlebih dahulu sebelum bergerak!");
+                isRunning = false; return;
+            }
+
+            for (let i = 0; i < commands.length; i++) {
+                const cmd = commands[i];
+                
+                const items = document.querySelectorAll('.program-item');
+                items.forEach(el => el.style.color = '#abb2bf');
+                items[i].style.color = '#98c379'; 
+
+                if (cmd === 'takeoff' && !drone.isFlying) {
+                    drone.isFlying = true; drone.z = 20;
+                } 
+                else if (drone.isFlying) {
+                    switch (cmd) {
+                        case 'up': if(drone.z < 60) drone.z += 20; break;
+                        case 'down': 
+                            drone.z -= 20; 
+                            if (drone.z <= 0) { drone.z = 0; drone.isFlying = false; }
+                            break;
+                        case 'forward': drone.gy -= 1; break;
+                        case 'backward': drone.gy += 1; break;
+                        case 'left': drone.gx -= 1; break;
+                        case 'right': drone.gx += 1; break;
+                    }
+                }
+
+                draw();
+                await sleep(500);
+
+                // Langgar Sempadan
+                if (drone.gx < 0 || drone.gx >= cols || drone.gy < 0 || drone.gy >= rows) {
+                    alert("Dron terkeluar dari sempadan peta! Cuba lagi.");
+                    resetDrone();
+                    break;
+                }
+
+                // Langgar Halangan
+                let isCrash = obstacles.find(o => o.x === drone.gx && o.y === drone.gy);
+                if (isCrash) {
+                    alert("BAM! Dron melanggar dinding. Cuba perbaiki kod anda.");
+                    resetDrone();
+                    break;
+                }
+
+                // Berjaya Tiba
+                if (drone.gx === endPos.x && drone.gy === endPos.y) {
+                    clearInterval(timerInterval); // Hentikan masa
+                    isTimerRunning = false;
+                    
+                    alert(`TAHNIAH!\n\nPeserta: ${playerName}\nSekolah: ${playerSchool}\n\nAnda berjaya mendarat!\nMasa Rekod Anda: ${secondsElapsed} Saat.\n\nSila tunggu sebentar, data sedang dihantar...`);
+                    
+                    // --- KOD HANTAR DATA KE GOOGLE SHEET ---
+                    const scriptURL = 'https://script.google.com/macros/s/AKfycbyzfg2c4fN4VI2KKTkDj4-31GwfAxuWi0ogk9OFaI-lx8Lwu63RzQAPMjOYvwWZgEIn/exec';
+                    const urlToFetch = `${scriptURL}?action=tambah&nama=${encodeURIComponent(playerName)}&sekolah=${encodeURIComponent(playerSchool)}&masa=${secondsElapsed}`;
+
+                    fetch(urlToFetch)
+                        .then(response => response.json())
+                        .then(data => {
+                            if(data.status === "berjaya"){
+                                alert("Data anda telah berjaya direkodkan dalam sistem leaderboard!");
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert("Terdapat ralat semasa menghantar data. Pastikan internet anda stabil.");
+                        });
+                    // ----------------------------------------
+                    
+                    break;
+                }
+            }
+
+            const items = document.querySelectorAll('.program-item');
+            items.forEach(el => el.style.color = '#abb2bf');
+            isRunning = false;
+        }
+    </script>
+</body>
+</html>
