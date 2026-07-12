@@ -1,14 +1,14 @@
 /* 1. Unvisited link (default) */
 a:link {
-  color: #38bdf8; /* Light sky blue */
+  color: #D096FF; /* Light sky blue */
 }
 
 /* 2. Visited link (This fixes your purple problem!) */
 a:visited {
-  color: #c084fc; /* A bright, readable lavender instead of dark purple */
+  color: #2787F5; /* A bright, readable lavender instead of dark purple */
 }
 
 /* 3. When the user hovers their mouse over it */
 a:hover {
-  color: #ffffff; /* Turns white on hover */
+  color: #96C7FF; /* Turns white on hover */
 }
